@@ -54,14 +54,16 @@ CronJob = require('cron').CronJob
 module.exports = (robot) ->
   new CronJob(
     '0 0 11 * * 1-5',
-    () -> { robot.startVote '#room', ['item1', 'item2', 'item3'] },
+    ->
+      robot.startVote '#room', ['item1', 'item2', 'item3'],
     null,
     true,
     'Asia/Tokyo'
   )
   new CronJob(
     '0 30 11 * * 1-5',
-    () -> { robot.endVote '#room' },
+    ->
+      robot.endVote '#room',
     null,
     true,
     'Asia/Tokyo'
