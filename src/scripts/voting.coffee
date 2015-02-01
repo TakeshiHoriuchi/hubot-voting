@@ -23,8 +23,37 @@
 module.exports = (robot) ->
   robot.voting = {}
 
-  robot.respond /start vote (.+)$/i, (msg) ->
+  robot.startVote = (room, choices) ->
+    envelope = { room: room }
+    if robot.voting.votes?
+      robot.send envelope, "A vote is already underway"
+      robot.send envelope, choicesMessage()
+    else
+      robot.voting.votes = {}
+      robot.voting.choices = choices
+      robot.send envelope, "Vote started"
+      text = choicesMessage()
+      robot.send envelope, text
 
+  robot.endVote = (room) ->
+    envelope = { room: room }
+    if robot.voting.votes?
+      console.log robot.voting.votes
+
+      results = tallyVotes()
+
+      response = "The results are..."
+      for choice, index in robot.voting.choices
+        response += "\n#{choice}: #{results[index]}"
+
+      robot.send envelope, response
+
+      delete robot.voting.votes
+      delete robot.voting.choices
+    else
+      robot.send envelope, "There is not a vote to end"
+
+  robot.respond /start vote (.+)$/i, (msg) ->
     if robot.voting.votes?
       msg.send "A vote is already underway"
       sendChoices (msg)
@@ -51,7 +80,6 @@ module.exports = (robot) ->
       delete robot.voting.choices
     else
       msg.send "There is not a vote to end"
-
 
   robot.respond /show choices/i, (msg) ->
     sendChoices(msg)
@@ -81,6 +109,16 @@ module.exports = (robot) ->
 
   createChoices = (rawChoices) ->
     robot.voting.choices = rawChoices.split(/, /)
+
+  choicesMessage = ->
+    if robot.voting.choices?
+      response = ""
+      for choice, index in robot.voting.choices
+        response += "#{index}: #{choice}"
+        response += "\n" unless index == robot.voting.choices.length - 1
+      response
+    else
+      "There is not a vote going on right now"
 
   sendChoices = (msg, results = null) ->
 
